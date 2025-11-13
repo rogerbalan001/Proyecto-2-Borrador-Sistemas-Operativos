@@ -4,10 +4,42 @@
  */
 package proyecto2francobarrarogerbalan;
 
+
 /**
  *
  * @author frank
  */
 public class GestorSesion {
     
+    private ModoUsuario modoActual;
+
+    public GestorSesion() {
+        // Por defecto, el sistema arranca en modo Usuario
+        this.modoActual = ModoUsuario.USUARIO;
+    }
+
+    /**
+     * Cambia el modo de la sesión actual.
+     * @param nuevoModo El modo al que se desea cambiar.
+     */
+    public void setModoActual(ModoUsuario nuevoModo) {
+        this.modoActual = nuevoModo;
+        System.out.println("Modo cambiado a: " + nuevoModo);
+    }
+
+    /**
+     * Devuelve el modo de la sesión actual.
+     * @return El ModoUsuario actual.
+     */
+    public ModoUsuario getModoActual() {
+        return modoActual;
+    }
+
+    /**
+     * Helper rápido para verificar si el modo actual es Administrador.
+     * @return true si el modo es ADMIN, false en caso contrario.
+     */
+    public boolean isAdmin() {
+        return this.modoActual == ModoUsuario.ADMINISTRADOR;
+    }
 }
