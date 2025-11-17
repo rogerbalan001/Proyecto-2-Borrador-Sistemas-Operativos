@@ -4,19 +4,50 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 public class GUI extends javax.swing.JFrame {
 
     /**
      * Creates new form GUI
-     */
+     */// --- VARIABLES GLOBALES QUE AGREGAMOS ---
+    private FileManager fileManager;
+    private Timer simulationTimer;
+    
+    // Componentes visuales personalizados
+    private JTree treeDirectorios;
+    private DefaultTreeModel treeModel;
+    private JPanel panelDisco;
+    private JTable tablaProcesos;
+    private DefaultTableModel tableModelProcesos;
+    private JLabel lblEstadoDisco;
     public GUI() {
         initComponents();
     }
-
+/**
+     * Constructor personalizado que recibe el FileManager
+     */
+    public GUI(FileManager fileManager) {
+        // 1. Inicializa lo básico de NetBeans
+        initComponents();
+        
+        this.fileManager = fileManager;
+        
+        // 2. Sobrescribimos el diseño con el nuestro
+        iniciarComponentesDinamicos();
+        
+        // 3. Timer para actualizar pantalla cada segundo
+        simulationTimer = new Timer(1000, (ActionEvent e) -> {
+            actualizarVistas();
+        });
+        simulationTimer.start();
+        
+        actualizarVistas();
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -77,6 +108,295 @@ public class GUI extends javax.swing.JFrame {
         });
     }
 
+    // Colores de Alto Contraste
+    private final Color COLOR_FONDO = new Color(18, 18, 18);        // Negro casi puro
+    private final Color COLOR_PANEL = new Color(35, 35, 35);        // Gris oscuro
+    private final Color COLOR_TEXTO = new Color(255, 255, 255);     // BLANCO PURO
+    private final Color COLOR_ACCENTO = new Color(52, 152, 219);    // Azul Brillante
+    private final Color COLOR_VERDE = new Color(46, 204, 113);      
+    private final Color COLOR_ROJO = new Color(231, 76, 60);        
+
+    private void iniciarComponentesDinamicos() {
+        setTitle("Simulador SO - Proyecto 2 [Dark High Contrast]");
+        setSize(1280, 720);
+        setLocationRelativeTo(null);
+        
+        // Fondo General
+        getContentPane().setBackground(COLOR_FONDO);
+        setLayout(new BorderLayout(15, 15)); // Más espacio entre paneles
+
+        // --- 1. ÁRBOL (Izquierda) ---
+        treeModel = new DefaultTreeModel(new DefaultMutableTreeNode("Root"));
+        treeDirectorios = new JTree(treeModel);
+        estilizarArbol(treeDirectorios); 
+        
+        JScrollPane scrollTree = new JScrollPane(treeDirectorios);
+        scrollTree.setBorder(BorderFactory.createEmptyBorder());
+        scrollTree.getViewport().setBackground(COLOR_PANEL);
+
+        JPanel panelIzq = crearPanelModerno("EXPLORADOR DE ARCHIVOS");
+        panelIzq.add(scrollTree, BorderLayout.CENTER);
+
+        // --- 2. DISCO (Centro) ---
+        panelDisco = new JPanel();
+        panelDisco.setLayout(new GridLayout(16, 16, 3, 3)); 
+        panelDisco.setBackground(COLOR_PANEL);
+        
+        JScrollPane scrollDisco = new JScrollPane(panelDisco);
+        scrollDisco.setBorder(BorderFactory.createEmptyBorder());
+        scrollDisco.getViewport().setBackground(COLOR_PANEL);
+        
+        JPanel panelCentro = crearPanelModerno("MAPA DE BITS (DISCO)");
+        panelCentro.add(scrollDisco, BorderLayout.CENTER);
+
+        // --- 3. PANEL INFERIOR ---
+        JPanel panelInferior = new JPanel(new BorderLayout(15, 0));
+        panelInferior.setBackground(COLOR_FONDO);
+        panelInferior.setPreferredSize(new Dimension(0, 280));
+        panelInferior.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+
+        // Tabla
+        String[] columnNames = {"PID", "Nombre del Proceso", "Estado"};
+        tableModelProcesos = new DefaultTableModel(columnNames, 0);
+        tablaProcesos = new JTable(tableModelProcesos);
+        estilizarTabla(tablaProcesos); 
+        
+        JScrollPane scrollTabla = new JScrollPane(tablaProcesos);
+        scrollTabla.setBorder(BorderFactory.createLineBorder(COLOR_PANEL));
+        scrollTabla.getViewport().setBackground(COLOR_PANEL); // Fondo del scroll oscuro
+        
+        JPanel panelTablaContainer = crearPanelModerno("COLA DE PROCESOS");
+        panelTablaContainer.add(scrollTabla, BorderLayout.CENTER);
+
+        // Botones
+        JPanel panelControles = crearPanelModerno("PANEL DE CONTROL");
+        panelControles.setPreferredSize(new Dimension(250, 0));
+        
+        JPanel gridBotones = new JPanel(new GridLayout(5, 1, 0, 15)); 
+        gridBotones.setBackground(COLOR_PANEL);
+        gridBotones.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        JButton btnCrearArchivo = crearBotonModerno("Crear Archivo");
+        JButton btnCrearCarpeta = crearBotonModerno("Crear Carpeta");
+        JButton btnEliminar = crearBotonModerno("Eliminar Selección");
+        
+        lblEstadoDisco = new JLabel("Cargando...", SwingConstants.CENTER);
+        lblEstadoDisco.setForeground(Color.WHITE); // Texto blanco forzado
+        lblEstadoDisco.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        
+        gridBotones.add(lblEstadoDisco);
+        gridBotones.add(btnCrearArchivo);
+        gridBotones.add(btnCrearCarpeta);
+        gridBotones.add(btnEliminar);
+        
+        panelControles.add(gridBotones, BorderLayout.CENTER);
+
+        // Eventos
+        btnCrearArchivo.addActionListener(e -> accionCrearArchivo());
+        btnCrearCarpeta.addActionListener(e -> accionCrearCarpeta());
+
+        panelInferior.add(panelTablaContainer, BorderLayout.CENTER);
+        panelInferior.add(panelControles, BorderLayout.EAST);
+
+        add(panelIzq, BorderLayout.WEST);
+        add(panelCentro, BorderLayout.CENTER);
+        add(panelInferior, BorderLayout.SOUTH);
+        
+        revalidate();
+        repaint();
+    }
+
+    // --- HELPERS DE ESTILO CORREGIDOS ---
+
+    private JPanel crearPanelModerno(String titulo) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(COLOR_PANEL);
+        
+        // AQUÍ ESTABA EL ERROR: Ahora forzamos el color del título a BLANCO
+        javax.swing.border.TitledBorder bordeTitulo = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(COLOR_ACCENTO, 1), // Borde azul fino
+                titulo,
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new Font("Segoe UI", Font.BOLD, 12),
+                Color.WHITE // <--- ESTO HACE QUE LAS LETRAS SE VEAN BLANCAS
+        );
+        
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            bordeTitulo,
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        return panel;
+    }
+
+    private JButton crearBotonModerno(String texto) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(COLOR_ACCENTO);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private void estilizarArbol(JTree tree) {
+        tree.setBackground(COLOR_PANEL);
+        tree.setForeground(Color.WHITE); // Texto blanco
+        tree.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        
+        // Renderizador simple para forzar texto blanco
+        tree.setCellRenderer(new javax.swing.tree.DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean exp, boolean leaf, int row, boolean hasFocus) {
+                super.getTreeCellRendererComponent(tree, value, sel, exp, leaf, row, hasFocus);
+                
+                // Colores normales
+                setBackgroundNonSelectionColor(COLOR_PANEL);
+                setTextNonSelectionColor(Color.WHITE);
+                
+                // Colores al seleccionar
+                setBackgroundSelectionColor(COLOR_ACCENTO);
+                setTextSelectionColor(Color.WHITE);
+                
+                return this;
+            }
+        });
+    }
+
+    private void estilizarTabla(JTable table) {
+        // Cuerpo de la tabla
+        table.setBackground(COLOR_PANEL);
+        table.setForeground(Color.WHITE); // Texto blanco
+        table.setGridColor(new Color(80, 80, 80));
+        table.setRowHeight(28);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setSelectionBackground(COLOR_ACCENTO);
+        table.setSelectionForeground(Color.WHITE);
+        
+        // Encabezado (Header) - Aquí es donde suele fallar en Dark Mode
+        javax.swing.table.JTableHeader header = table.getTableHeader();
+        header.setBackground(new Color(25, 25, 25)); // Fondo cabecera más oscuro
+        header.setForeground(COLOR_ACCENTO); // Texto cabecera Azul
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setOpaque(true);
+    }
+    private void actualizarVistas() {
+        if (fileManager == null) return;
+        actualizarArbol();
+        actualizarMapaDisco();
+        actualizarTablaProcesos();
+    }
+
+    private void actualizarArbol() {
+        NodeDirectory rootNode = fileManager.getRoot();
+        if (rootNode == null) return;
+        DefaultMutableTreeNode visualRoot = new DefaultMutableTreeNode(rootNode.getName());
+        construirArbolRecursivo(rootNode, visualRoot);
+        treeModel.setRoot(visualRoot);
+        treeModel.reload();
+        for (int i = 0; i < treeDirectorios.getRowCount(); i++) {
+            treeDirectorios.expandRow(i);
+        }
+    }
+
+    private void construirArbolRecursivo(NodeDirectory dir, DefaultMutableTreeNode visualNode) {
+        proyecto2francobarrarogerbalan.List<Node> children = dir.getChildren();
+        if (children != null) {
+            NodeList<Node> current = children.getHead();
+            while (current != null) {
+                Node childData = current.getData();
+                DefaultMutableTreeNode visualChild = new DefaultMutableTreeNode(childData.getName());
+                if (childData instanceof NodeDirectory) {
+                    construirArbolRecursivo((NodeDirectory) childData, visualChild);
+                }
+                visualNode.add(visualChild);
+                current = current.getNext();
+            }
+        }
+    }
+
+    private void actualizarMapaDisco() {
+        panelDisco.removeAll();
+        Block[] bloques = fileManager.getDisco().getBlocks();
+        int libres = 0;
+        
+        for (int i = 0; i < bloques.length; i++) {
+            JPanel bloqueView = new JPanel();
+            // Usamos colores planos (Flat)
+            if (bloques[i].isFree()) {
+                bloqueView.setBackground(COLOR_VERDE); // Verde moderno
+                libres++;
+            } else {
+                bloqueView.setBackground(COLOR_ROJO); // Rojo moderno
+                JLabel num = new JLabel(String.valueOf(i));
+                num.setForeground(Color.WHITE);
+                num.setFont(new Font("SansSerif", Font.BOLD, 10));
+                bloqueView.add(num);
+            }
+            panelDisco.add(bloqueView);
+        }
+        
+        lblEstadoDisco.setText("<html>Libres: <font color='#2ecc71'>" + libres + "</font> / " + bloques.length + "</html>");
+        panelDisco.revalidate();
+        panelDisco.repaint();
+    }
+
+    private void actualizarTablaProcesos() {
+        tableModelProcesos.setRowCount(0);
+        proyecto2francobarrarogerbalan.List<proyecto2francobarrarogerbalan.Process> lista = fileManager.getTablaProcesos();
+        if (lista != null) {
+            NodeList<proyecto2francobarrarogerbalan.Process> current = lista.getHead();
+            while (current != null) {
+                proyecto2francobarrarogerbalan.Process p = current.getData();
+                tableModelProcesos.addRow(new Object[]{p.getPid(), p.getName(), p.getState()});
+                current = current.getNext();
+            }
+        }
+    }
+
+    // --- ACCIONES DE BOTONES (MISMA LÓGICA) ---
+
+    private void accionCrearArchivo() {
+        try {
+            // Usamos un panel personalizado para el input para que combine con el tema oscuro
+            JTextField nombreField = new JTextField();
+            JTextField tamField = new JTextField();
+            Object[] message = {
+                "Nombre del Archivo:", nombreField,
+                "Tamaño (Bloques):", tamField
+            };
+
+            int option = JOptionPane.showConfirmDialog(this, message, "Crear Archivo", JOptionPane.OK_CANCEL_OPTION);
+            
+            if (option == JOptionPane.OK_OPTION) {
+                String nombre = nombreField.getText();
+                int tam = Integer.parseInt(tamField.getText());
+                
+                NodeDirectory root = fileManager.getRoot();
+                NodeFile nuevo = new NodeFile(nombre, root, tam);
+                
+                if (fileManager.getGestorAsignacion().allocateFile(nuevo)) {
+                    root.addChild(nuevo);
+                    fileManager.getProcessManager().createProcess("Crear " + nombre);
+                    JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error: Disco lleno.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                actualizarVistas();
+            }
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(this, "Datos inválidos.", "Error", JOptionPane.ERROR_MESSAGE); 
+        }
+    }
+
+    private void accionCrearCarpeta() {
+        String nombre = JOptionPane.showInputDialog(this, "Nombre Carpeta:");
+        if (nombre != null && !nombre.trim().isEmpty()) {
+             fileManager.getRoot().addChild(new NodeDirectory(nombre, fileManager.getRoot()));
+             actualizarVistas();
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
 }

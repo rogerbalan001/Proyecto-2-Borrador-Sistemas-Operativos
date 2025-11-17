@@ -60,4 +60,9 @@ public class ProcessManager {
     public List<Process> getProcessTable() {
         return processTable;
     }
+    // Agrega esto dentro de la clase ProcessManager.java
+
+public List<Process> getProcessList() {
+    return this.processTable;
+}
 }

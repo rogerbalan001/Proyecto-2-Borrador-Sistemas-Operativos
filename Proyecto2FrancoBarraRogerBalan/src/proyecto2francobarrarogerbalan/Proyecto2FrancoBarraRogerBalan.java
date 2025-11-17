@@ -4,17 +4,29 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
+import javax.swing.UIManager;
+
 public class Proyecto2FrancoBarraRogerBalan {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-        // TODO code application logic here
+        // Intentar poner el estilo del sistema operativo para que se vea mejor
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Inicializar el sistema de archivos (Backend)
+        FileManager fileManager = new FileManager();
+        
+        // Crear carpeta root manualmente si no existe en el constructor de FileManager
+        // (Asumo que FileManager crea el root internamente, si no, descomenta abajo)
+        // if (fileManager.getRoot() == null) { /* lógica init root */ }
+
+        // Iniciar la GUI (Frontend)
+        java.awt.EventQueue.invokeLater(() -> {
+            GUI gui = new GUI(fileManager);
+            gui.setVisible(true);
+        });
     }
-    
 }
