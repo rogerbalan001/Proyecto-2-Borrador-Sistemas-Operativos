@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class NodeList<T> {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class NodeList<T> implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     private T data; // El dato que guarda (ej. un NodeFile, un Process, etc.)
     private NodeList<T> next; // El puntero al siguiente nodo

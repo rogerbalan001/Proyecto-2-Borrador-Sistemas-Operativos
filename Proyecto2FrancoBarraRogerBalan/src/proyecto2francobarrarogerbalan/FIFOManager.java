@@ -4,13 +4,18 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable; // <--- IMPORTANTE
+
 /**
- *
+ * Algoritmo FIFO (First In, First Out).
+ * Atiende las solicitudes en el orden exacto en que llegaron.
  * @author frank
  */
-public class FIFOManager implements DiscoManager {
+public class FIFOManager implements DiscoManager, Serializable { // <--- IMPLEMENTS
     
-    // ¡Aquí usamos tu clase Cola!
+    private static final long serialVersionUID = 1L; // Versión para serialización
+    
+    // Usamos tu clase Cola, que ya hicimos Serializable en pasos anteriores
     private Cola<IORequests> requestQueue;
 
     public FIFOManager() {
@@ -22,38 +27,24 @@ public class FIFOManager implements DiscoManager {
      */
     @Override
     public void addRequest(IORequests request) {
-        // Asumimos que tu Cola.java tiene un método 'enqueue' o 'add'
         this.requestQueue.enqueue(request); 
     }
 
     /**
-     * Devuelve la solicitud del frente de la cola (la primera que entró),
-     * sin importar la posición de la cabeza lectora.
+     * Devuelve la solicitud del frente de la cola (la primera que entró).
+     * FIFO ignora la posición de la cabeza lectora.
      */
     @Override
     public IORequests getNextRequest(int currentHeadPosition) {
         if (!hasPendingRequests()) {
             return null;
         }
-        // Asumimos que tu Cola.java tiene un método 'dequeue' o 'remove'
+        // Saca el primero de la fila
         return this.requestQueue.dequeue();
     }
 
-    /**
-     * Verifica si la cola tiene elementos.
-     */
     @Override
     public boolean hasPendingRequests() {
-        // Asumimos que tu Cola.java tiene un método 'isEmpty'
         return !this.requestQueue.isEmpty();
     }
-    
-    /*
-    @Override
-    public List<IORequests> getQueueSnapshot() {
-        // TODO: Implementar si se necesita para la GUI.
-        // Esto requeriría que 'Cola' sea iterable.
-        return null;
-    }
-    */
 }

@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class DiscoDuro {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class DiscoDuro implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     // Definimos un tamaño máximo de bloques [cite: 34, 35]
     // Vamos a usar 256 bloques como ejemplo.

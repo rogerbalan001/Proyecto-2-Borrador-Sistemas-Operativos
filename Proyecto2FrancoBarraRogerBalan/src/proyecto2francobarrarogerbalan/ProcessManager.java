@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class ProcessManager {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class ProcessManager implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     // Usamos nuestra lista personalizada para la tabla de procesos
     private List<Process> processTable;

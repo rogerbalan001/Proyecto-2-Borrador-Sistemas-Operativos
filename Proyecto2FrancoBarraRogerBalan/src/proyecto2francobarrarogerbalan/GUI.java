@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 public class GUI extends javax.swing.JFrame {
@@ -26,6 +27,7 @@ public class GUI extends javax.swing.JFrame {
     private DefaultTableModel tableModelProcesos;
     private JLabel lblEstadoDisco;
     public GUI() {
+
         initComponents();
     }
 /**
@@ -194,7 +196,8 @@ public class GUI extends javax.swing.JFrame {
         // Eventos
         btnCrearArchivo.addActionListener(e -> accionCrearArchivo());
         btnCrearCarpeta.addActionListener(e -> accionCrearCarpeta());
-
+        btnEliminar.addActionListener(e -> accionEliminarArchivo());
+        
         panelInferior.add(panelTablaContainer, BorderLayout.CENTER);
         panelInferior.add(panelControles, BorderLayout.EAST);
 
@@ -281,7 +284,7 @@ public class GUI extends javax.swing.JFrame {
         header.setFont(new Font("Segoe UI", Font.BOLD, 13));
         header.setOpaque(true);
     }
-    private void actualizarVistas() {
+    void actualizarVistas() {
         if (fileManager == null) return;
         actualizarArbol();
         actualizarMapaDisco();
@@ -357,9 +360,9 @@ public class GUI extends javax.swing.JFrame {
 
     // --- ACCIONES DE BOTONES (MISMA LÓGICA) ---
 
-    private void accionCrearArchivo() {
+   private void accionCrearArchivo() {
         try {
-            // Usamos un panel personalizado para el input para que combine con el tema oscuro
+            // Usamos campos de texto simples para el input
             JTextField nombreField = new JTextField();
             JTextField tamField = new JTextField();
             Object[] message = {
@@ -373,28 +376,70 @@ public class GUI extends javax.swing.JFrame {
                 String nombre = nombreField.getText();
                 int tam = Integer.parseInt(tamField.getText());
                 
+                if (tam <= 0) throw new NumberFormatException(); // Validar positivos
+                
+                // 1. Crear el OBJETO LÓGICO (Aparece en el árbol, pero sin bloques físicos aún)
                 NodeDirectory root = fileManager.getRoot();
                 NodeFile nuevo = new NodeFile(nombre, root, tam);
                 
-                if (fileManager.getGestorAsignacion().allocateFile(nuevo)) {
-                    root.addChild(nuevo);
-                    fileManager.getProcessManager().createProcess("Crear " + nombre);
-                    JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Error: Disco lleno.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                // 2. Lo agregamos visualmente al árbol YA, para que el usuario vea que se "encoló"
+                root.addChild(nuevo);
+                
+                // 3. Crear el PROCESO
+                // (Si te marca error en 'Process', asegúrate de importar tu clase Process, no la de java.lang)
+                proyecto2francobarrarogerbalan.Process proceso = fileManager.getProcessManager().createProcess("Crear " + nombre);
+                
+                // 4. Crear la SOLICITUD (IORequest)
+                // targetBlock es 0 porque el algoritmo decidirá dónde ponerlo
+                IORequests request = new IORequests(proceso, TipoSolicitud.CREAR, nuevo.getPath(), tam, 0);
+                request.setArchivoPendiente(nuevo); // ¡IMPORTANTE! Pasamos el objeto
+                
+                // 5. ENVIAR AL KERNEL (PLANIFICADOR)
+                fileManager.getPlanificador().addRequest(request);
+                
+                JOptionPane.showMessageDialog(this, "Solicitud enviada a la cola. Espere procesamiento...");
                 actualizarVistas();
             }
         } catch (Exception ex) { 
-            JOptionPane.showMessageDialog(this, "Datos inválidos.", "Error", JOptionPane.ERROR_MESSAGE); 
+            JOptionPane.showMessageDialog(this, "Datos inválidos (Use números enteros positivos).", "Error", JOptionPane.ERROR_MESSAGE); 
         }
     }
-
     private void accionCrearCarpeta() {
         String nombre = JOptionPane.showInputDialog(this, "Nombre Carpeta:");
         if (nombre != null && !nombre.trim().isEmpty()) {
              fileManager.getRoot().addChild(new NodeDirectory(nombre, fileManager.getRoot()));
              actualizarVistas();
+        }
+    }
+    private void accionEliminarArchivo() {
+        // 1. Obtener el nodo seleccionado en el árbol visual (JTree)
+        // Nota: Asegúrate de que tu JTree se llame 'treeDirectorios'
+        javax.swing.tree.DefaultMutableTreeNode nodoSeleccionado = (javax.swing.tree.DefaultMutableTreeNode) treeDirectorios.getLastSelectedPathComponent();
+        
+        if (nodoSeleccionado == null || nodoSeleccionado.isRoot()) {
+            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta (que no sea Root) para eliminar.");
+            return;
+        }
+        
+        String nombreNodo = (String) nodoSeleccionado.getUserObject();
+        
+        // 2. Buscar el nodo real en el backend
+        Node nodoReal = fileManager.getRoot().findChild(nombreNodo);
+        
+        if (nodoReal != null) {
+            // 3. Crear Proceso y Solicitud
+            proyecto2francobarrarogerbalan.Process proceso = fileManager.getProcessManager().createProcess("Borrar " + nombreNodo);
+            
+            IORequests request = new IORequests(proceso, TipoSolicitud.ELIMINAR, nodoReal.getPath(), 0, 0);
+            request.setArchivoPendiente(nodoReal); // Pasamos qué queremos borrar
+            
+            // 4. Enviar al Planificador
+            fileManager.getPlanificador().addRequest(request);
+            
+            JOptionPane.showMessageDialog(this, "Solicitud de eliminación enviada.");
+            actualizarVistas();
+        } else {
+             JOptionPane.showMessageDialog(this, "Error: No se encontró el objeto en el sistema de archivos.");
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -4,10 +4,12 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- * Clase Controladora Principal (Backend)
- */
-public class FileManager {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class FileManager implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    // Identificador de versión (opcional, pero buena práctica)
+    private static final long serialVersionUID = 1L;
 
     // --- Componentes del Sistema ---
     private DiscoDuro disco;

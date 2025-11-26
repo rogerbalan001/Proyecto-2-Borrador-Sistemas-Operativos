@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class GestorAsignacion {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class GestorAsignacion implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     private DiscoDuro disco;
 

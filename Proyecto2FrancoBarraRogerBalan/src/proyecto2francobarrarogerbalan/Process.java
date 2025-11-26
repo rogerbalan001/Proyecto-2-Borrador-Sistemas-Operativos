@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class Process {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class Process implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     private static int nextPID = 1; // Contador estático para IDs únicos
     

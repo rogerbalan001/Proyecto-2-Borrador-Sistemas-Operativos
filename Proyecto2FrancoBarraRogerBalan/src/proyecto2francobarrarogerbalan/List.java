@@ -4,13 +4,23 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable;
+
 /**
- *
- * @author frank
+ * Lista Enlazada Genérica Personalizada.
+ * Reemplaza a java.util.LinkedList o ArrayList.
+ * * CAMBIOS REALIZADOS:
+ * 1. Implementa Serializable (Vital para guardar el estado).
+ * 2. Agregado método remove() (Vital para el HiloSimulador).
+ * * @author frank
+ * @param <T> El tipo de dato que guardará la lista.
  */
-public class List<T> {
+public class List<T> implements Serializable {
     
-    private NodeList<T> head; // El primer elemento de la lista
+    // Identificador de versión para serialización (recomendado)
+    private static final long serialVersionUID = 1L;
+    
+    private NodeList<T> head; // El primer nodo de la lista
     private int size;
 
     public List() {
@@ -18,7 +28,10 @@ public class List<T> {
         this.size = 0;
     }
 
-    // Método para agregar al final (el más común)
+    /**
+     * Agrega un elemento al final de la lista.
+     * @param data El dato a guardar.
+     */
     public void add(T data) {
         NodeList<T> newNode = new NodeList<>(data);
         if (isEmpty()) {
@@ -33,11 +46,42 @@ public class List<T> {
         size++;
     }
 
-    // Método para eliminar (requerirá más lógica, ej. por índice o por objeto)
-    // public boolean remove(T data) { ... }
-    
-    // Método para obtener por índice
-    // public T get(int index) { ... }
+    /**
+     * Elimina la primera ocurrencia del dato especificado.
+     * --- ESTE ES EL MÉTODO QUE TE FALTABA ---
+     * @param data El objeto a eliminar.
+     * @return true si se eliminó, false si no se encontró.
+     */
+    public boolean remove(T data) {
+        if (isEmpty()) {
+            return false;
+        }
+
+        // Caso 1: El nodo a eliminar es la cabeza (head)
+        if (head.getData().equals(data)) {
+            head = head.getNext();
+            size--;
+            return true;
+        }
+
+        // Caso 2: Buscar en el resto de la lista
+        NodeList<T> current = head;
+        NodeList<T> prev = null;
+
+        while (current != null && !current.getData().equals(data)) {
+            prev = current;
+            current = current.getNext();
+        }
+
+        // Si lo encontramos (current no es null)
+        if (current != null) {
+            prev.setNext(current.getNext());
+            size--;
+            return true;
+        }
+
+        return false; // No estaba en la lista
+    }
 
     public boolean isEmpty() {
         return head == null;
@@ -47,40 +91,11 @@ public class List<T> {
         return size;
     }
     
-    // Podrías necesitar un método para obtener el 'head' 
-    // y así poder iterar la lista desde fuera
+    /**
+     * Permite recorrer la lista desde fuera.
+     * @return El primer nodo de la lista.
+     */
     public NodeList<T> getHead() {
         return head;
     }
-    public boolean remove(T data) {
-    if (isEmpty()) {
-        return false;
-    }
-
-    // Caso 1: El nodo a eliminar es la cabeza (head)
-    if (head.getData().equals(data)) {
-        head = head.getNext();
-        size--;
-        return true;
-    }
-
-    // Caso 2: El nodo a eliminar está en medio o al final
-    NodeList<T> current = head;
-    NodeList<T> prev = null;
-
-    while (current != null && !current.getData().equals(data)) {
-        prev = current;
-        current = current.getNext();
-    }
-
-    // Si current es null, el dato no se encontró
-    if (current == null) {
-        return false;
-    }
-
-    // Si se encontró, "saltamos" el nodo actual
-    prev.setNext(current.getNext());
-    size--;
-    return true;
-}
 }

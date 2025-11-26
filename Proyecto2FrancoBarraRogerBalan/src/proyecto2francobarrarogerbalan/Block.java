@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public class Block {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public class Block implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
 
     // -1 podría significar "libre"
     // 0 podría significar "ocupado, pero es el último bloque del archivo (EOF)"

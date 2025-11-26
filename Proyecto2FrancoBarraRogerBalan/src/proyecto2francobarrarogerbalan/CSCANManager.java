@@ -4,12 +4,18 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable; // <--- IMPORTANTE
+
 /**
- *
+ * Algoritmo C-SCAN (Circular SCAN).
+ * La cabeza se mueve solo hacia el final (bloques altos).
+ * Al llegar al extremo, salta inmediatamente al inicio (bloque 0) y sigue subiendo.
  * @author frank
  */
-public class CSCANManager implements DiscoManager {
+public class CSCANManager implements DiscoManager, Serializable { // <--- IMPLEMENTS
 
+    private static final long serialVersionUID = 1L;
+    
     private List<IORequests> requestList;
 
     public CSCANManager() {
@@ -35,12 +41,15 @@ public class CSCANManager implements DiscoManager {
         IORequests bestRequest = null;
         int minSeekTime = Integer.MAX_VALUE;
 
-        // 1. Buscar la solicitud más cercana "hacia el final" (targetBlock >= head)
+        // 1. Buscar la solicitud más cercana PERO QUE SEA MAYOR O IGUAL a la posición actual
+        // (Es decir, "subiendo" hacia el final del disco)
         NodeList<IORequests> current = requestList.getHead();
+        
         while (current != null) {
             IORequests req = current.getData();
             int seekTime = req.getTargetBlock() - currentHeadPosition;
             
+            // Si seekTime es positivo, el bloque está adelante
             if (seekTime >= 0 && seekTime < minSeekTime) {
                 minSeekTime = seekTime;
                 bestRequest = req;
@@ -48,17 +57,17 @@ public class CSCANManager implements DiscoManager {
             current = current.getNext();
         }
 
-        // 2. Si no se encontró nada "hacia el final"...
+        // 2. Si no encontramos nada "adelante", significa que dimos la vuelta.
+        // Buscamos la solicitud con el bloque MÁS BAJO de toda la lista (cercano al 0).
         if (bestRequest == null) {
-            // ...significa que debemos "saltar" al inicio (bloque 0)
-            // y buscar la solicitud más cercana al inicio (el targetBlock más bajo).
             
             current = requestList.getHead();
-            // Esta vez no buscamos "seekTime", sino el bloque más bajo (más cercano a 0)
             int lowestBlock = Integer.MAX_VALUE; 
             
             while (current != null) {
                 IORequests req = current.getData();
+                
+                // Buscamos simplemente el número de bloque más pequeño
                 if (req.getTargetBlock() < lowestBlock) {
                     lowestBlock = req.getTargetBlock();
                     bestRequest = req;
@@ -67,7 +76,7 @@ public class CSCANManager implements DiscoManager {
             }
         }
         
-        // 3. Eliminar y retornar la solicitud encontrada
+        // 3. Eliminar y retornar
         if (bestRequest != null) {
             this.requestList.remove(bestRequest);
         }

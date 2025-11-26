@@ -4,12 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable; // <--- AGREGAR IMPORT
 
-/**
- *
- * @author frank
- */
-public class GestorSesion {
+public class GestorSesion implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     private ModoUsuario modoActual;
 

@@ -4,11 +4,11 @@
  */
 package proyecto2francobarrarogerbalan;
 
-/**
- *
- * @author frank
- */
-public abstract class Node {
+import java.io.Serializable; // <--- AGREGAR IMPORT
+
+public abstract class Node implements Serializable { // <--- AGREGAR IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
     
     protected String name;
     protected NodeDirectory parent; // Referencia a su directorio padre (null si es el root)

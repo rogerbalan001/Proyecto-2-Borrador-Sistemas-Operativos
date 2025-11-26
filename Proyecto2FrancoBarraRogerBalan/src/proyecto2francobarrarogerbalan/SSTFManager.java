@@ -4,13 +4,19 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable; // <--- IMPORTANTE
+
 /**
- *
+ * Algoritmo SSTF (Shortest Seek Time First).
+ * Selecciona la solicitud que requiere el menor movimiento de la cabeza lectora
+ * desde la posición actual.
  * @author frank
  */
-public class SSTFManager implements DiscoManager {
+public class SSTFManager implements DiscoManager, Serializable { // <--- IMPLEMENTS
+    
+    private static final long serialVersionUID = 1L;
 
-    private List<IORequests> requestList; // ¡Usamos List, no Cola!
+    private List<IORequests> requestList; // Usamos List para poder buscar en medio
 
     public SSTFManager() {
         this.requestList = new List<>();
@@ -32,13 +38,17 @@ public class SSTFManager implements DiscoManager {
             return null;
         }
 
+        // Iterador para recorrer tu lista personalizada
         NodeList<IORequests> current = requestList.getHead();
+        
         IORequests bestRequest = null;
         int minSeekTime = Integer.MAX_VALUE;
 
-        // 1. Iterar por TODA la lista para encontrar el más cercano
+        // 1. Barrer toda la lista buscando el que tenga menor distancia absoluta
         while (current != null) {
             IORequests req = current.getData();
+            
+            // Calculamos distancia absoluta (Math.abs)
             int seekTime = Math.abs(req.getTargetBlock() - currentHeadPosition);
 
             if (seekTime < minSeekTime) {
@@ -48,7 +58,7 @@ public class SSTFManager implements DiscoManager {
             current = current.getNext();
         }
 
-        // 2. Eliminar el "mejor" request de la lista
+        // 2. Eliminar la solicitud seleccionada de la lista y retornarla
         if (bestRequest != null) {
             this.requestList.remove(bestRequest);
         }
