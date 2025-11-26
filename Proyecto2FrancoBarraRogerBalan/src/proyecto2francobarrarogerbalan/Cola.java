@@ -4,11 +4,17 @@
  */
 package proyecto2francobarrarogerbalan;
 
+import java.io.Serializable; // <--- VITAL PARA GUARDAR
+
 /**
- *
+ * Estructura de Datos Cola (FIFO).
+ * Usada por el FIFOManager y otros componentes.
  * @author frank
+ * @param <T> Tipo de dato a almacenar.
  */
-public class Cola<T> {
+public class Cola<T> implements Serializable { // <--- AGREGADO
+    
+    private static final long serialVersionUID = 1L;
     
     private NodeList<T> front; // El frente de la cola (por donde se saca)
     private NodeList<T> rear;  // El final de la cola (por donde se mete)
@@ -76,7 +82,7 @@ public class Cola<T> {
     }
 
     public boolean isEmpty() {
-        return size == 0;
+        return front == null;
     }
 
     public int size() {
